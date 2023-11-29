@@ -25,14 +25,14 @@ func Init() {
 
 	clientstatisticsHandler := &clientstatistics.Controller{}
 
-	http.HandleFunc("/api/register", registerHandler.Run)
-	http.HandleFunc("/api/send_to_client", sendToClientHandler.Run)
-	http.HandleFunc("/api/send_to_clients", sendToClientsHandler.Run)
-	http.HandleFunc("/api/send_to_group", sendToGroupHandler.Run)
-	http.HandleFunc("/api/bind_to_group", bindToGroupHandler.Run)
-	http.HandleFunc("/api/get_online_list", getGroupListHandler.Run)
-	http.HandleFunc("/api/close_client", closeClientHandler.Run)
-	http.HandleFunc("/api/account/client/count", clientstatisticsHandler.Run)
+	http.HandleFunc("/api/register", AccessLogMiddleware(registerHandler.Run))
+	http.HandleFunc("/api/send_to_client", AccessLogMiddleware(sendToClientHandler.Run))
+	http.HandleFunc("/api/send_to_clients", AccessLogMiddleware(sendToClientsHandler.Run))
+	http.HandleFunc("/api/send_to_group", AccessLogMiddleware(sendToGroupHandler.Run))
+	http.HandleFunc("/api/bind_to_group", AccessLogMiddleware(bindToGroupHandler.Run))
+	http.HandleFunc("/api/get_online_list", AccessLogMiddleware(getGroupListHandler.Run))
+	http.HandleFunc("/api/close_client", AccessLogMiddleware(closeClientHandler.Run))
+	http.HandleFunc("/api/account/client/count", AccessLogMiddleware(clientstatisticsHandler.Run))
 	//http.HandleFunc("/api/send_to_client", AccessTokenMiddleware(sendToClientHandler.Run))
 	//http.HandleFunc("/api/send_to_clients", AccessTokenMiddleware(sendToClientsHandler.Run))
 	//http.HandleFunc("/api/send_to_group", AccessTokenMiddleware(sendToGroupHandler.Run))

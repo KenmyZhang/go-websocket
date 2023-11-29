@@ -2,6 +2,12 @@ package routers
 
 import (
 	"net/http"
+	"net/http/httputil"
+	"strings"
+	"time"
+
+	uuid "github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 
 	"github.com/woodylan/go-websocket/api"
 	"github.com/woodylan/go-websocket/define"
@@ -45,5 +51,46 @@ func AccessTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func AccessLogMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		traceId := r.Header.Get("Trace-Id")
+		if traceId == "" {
+			traceId = uuid.New().String()
+		}
+		httpRequest, _ := httputil.DumpRequest(r, true)
+		httpRequests := strings.Replace(string(httpRequest), "\r\n", " ", -1)
+		httpRequests = strings.Replace(httpRequests, "\n", " ", -1)
+		logger := logrus.WithFields(logrus.Fields{"trace_id": traceId})
+		logger.WithFields(logrus.Fields{"httpRequests": httpRequests}).Info("请求报文")
+		// 开始时间
+		startTime := time.Now()
+		next.ServeHTTP(w, r)
+
+		// 结束时间
+		endTime := time.Now()
+
+		// 执行时间
+		latencyTime := endTime.Sub(startTime)
+
+		// 请求方式
+		reqMethod := r.Method
+
+		// 请求路由
+		reqUri := r.RequestURI
+
+		// 请求IP
+		clientIP := r.RemoteAddr
+
+		//日志格式
+		logger.Infof("| %3d  | %15s | %s | %s |",
+			latencyTime,
+			clientIP,
+			reqMethod,
+			reqUri,
+		)
+
 	})
 }
