@@ -85,7 +85,7 @@ func AccessLogMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		clientIP := r.RemoteAddr
 
 		//日志格式
-		logger.Infof("| %3d  | %15s | %s | %s |",
+		logger.Infof("| %13v  | %15s | %s | %s |",
 			latencyTime,
 			clientIP,
 			reqMethod,
