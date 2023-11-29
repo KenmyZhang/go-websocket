@@ -2,10 +2,12 @@ package register
 
 import (
 	"encoding/json"
+	"net/http"
+
+	"github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/api"
 	"github.com/woodylan/go-websocket/define/retcode"
 	"github.com/woodylan/go-websocket/servers"
-	"net/http"
 )
 
 type Controller struct {
@@ -21,6 +23,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	logrus.WithFields(logrus.Fields{"inputData": inputData}).Info("ws链接参数")
 
 	err := api.Validate(inputData)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/api"
 	"github.com/woodylan/go-websocket/define/retcode"
@@ -49,6 +50,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	logger := logrus.WithFields(log.Fields{"token": systemId})
 
 	//clientId := util.GenClientId()
 	clientId := systemId
@@ -56,7 +58,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	clientSocket := NewClient(clientId, systemId, conn)
 
 	Manager.AddClient2SystemClient(systemId, clientSocket)
-
+	logger.Info("添加客户端成功")
 	//读取客户端消息
 	clientSocket.Read()
 
@@ -65,6 +67,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logger.Info("开始发送用户连接事件")
 	// 用户连接事件
 	Manager.Connect <- clientSocket
+	logger.Info("用户连接事件发送成功")
 }

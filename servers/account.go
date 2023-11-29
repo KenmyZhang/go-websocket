@@ -3,11 +3,12 @@ package servers
 import (
 	"encoding/json"
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/woodylan/go-websocket/define"
 	"github.com/woodylan/go-websocket/pkg/etcd"
 	"github.com/woodylan/go-websocket/tools/util"
-	"sync"
-	"time"
 )
 
 type accountInfo struct {

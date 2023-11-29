@@ -3,12 +3,14 @@ package servers
 import (
 	"encoding/json"
 	"errors"
+	"sync"
+	"time"
+
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/define/retcode"
 	"github.com/woodylan/go-websocket/pkg/setting"
 	"github.com/woodylan/go-websocket/tools/util"
-	"sync"
-	"time"
 )
 
 // 连接管理
@@ -174,7 +176,7 @@ func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUs
 	}
 }
 
-//发送给指定业务系统
+// 发送给指定业务系统
 func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId string, sendUserId string, code int, msg string, data *string) {
 	if len(systemId) > 0 {
 		clientIds := Manager.GetSystemClientList(systemId)
@@ -249,6 +251,7 @@ func (manager *ClientManager) AddClient2SystemClient(systemId string, client *Cl
 	manager.SystemClientsLock.Lock()
 	defer manager.SystemClientsLock.Unlock()
 	manager.SystemClients[systemId] = append(manager.SystemClients[systemId], client.ClientId)
+	logrus.WithFields(log.Fields{"manager.SystemClients": manager.SystemClients}).Info("客户端列表")
 }
 
 // 删除系统里的客户端

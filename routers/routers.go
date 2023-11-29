@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"net/http"
+
 	"github.com/woodylan/go-websocket/api/bind2group"
 	"github.com/woodylan/go-websocket/api/closeclient"
 	"github.com/woodylan/go-websocket/api/getonlinelist"
@@ -9,7 +11,6 @@ import (
 	"github.com/woodylan/go-websocket/api/send2clients"
 	"github.com/woodylan/go-websocket/api/send2group"
 	"github.com/woodylan/go-websocket/servers"
-	"net/http"
 )
 
 func Init() {

@@ -1,6 +1,6 @@
 module github.com/woodylan/go-websocket
 
-go 1.16
+go 1.18
 
 require (
 	github.com/coreos/bbolt v1.3.3 // indirect
@@ -38,7 +38,6 @@ require (
 	github.com/tebeka/strftime v0.1.3 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
-	go.etcd.io/bbolt v1.3.1-etcd.8 // indirect
 	go.uber.org/zap v1.12.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
