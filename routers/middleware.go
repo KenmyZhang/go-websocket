@@ -1,13 +1,14 @@
 package routers
 
 import (
+	"net/http"
+
 	"github.com/woodylan/go-websocket/api"
 	"github.com/woodylan/go-websocket/define"
 	"github.com/woodylan/go-websocket/define/retcode"
 	"github.com/woodylan/go-websocket/pkg/etcd"
 	"github.com/woodylan/go-websocket/servers"
 	"github.com/woodylan/go-websocket/tools/util"
-	"net/http"
 )
 
 func AccessTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
