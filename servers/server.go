@@ -1,18 +1,19 @@
 package servers
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/pkg/setting"
 	"github.com/woodylan/go-websocket/tools/util"
-	"net/http"
-	"time"
 )
 
-//channel通道
+// channel通道
 var ToClientChan chan clientInfo
 
-//channel通道结构体
+// channel通道结构体
 type clientInfo struct {
 	ClientId   string
 	SendUserId string
@@ -23,11 +24,13 @@ type clientInfo struct {
 }
 
 type RetData struct {
-	MessageId  string      `json:"messageId"`
-	SendUserId string      `json:"sendUserId"`
-	Code       int         `json:"code"`
-	Msg        string      `json:"msg"`
-	Data       interface{} `json:"data"`
+	MessageId  string `json:"messageId"`
+	SendUserId string `json:"sendUserId"`
+	Code       int    `json:"type"`
+	Msg        string `json:"-"`
+	//Code       int         `json:"code"`
+	//Msg        string      `json:"msg"`
+	Data interface{} `json:"data"`
 }
 
 // 心跳间隔
@@ -46,7 +49,7 @@ func StartWebSocket() {
 	go Manager.Start()
 }
 
-//发送信息到指定客户端
+// 发送信息到指定客户端
 func SendMessage2Client(clientId string, sendUserId string, code int, msg string, data *string) (messageId string) {
 	messageId = util.GenUUID()
 	if util.IsCluster() {
@@ -71,7 +74,7 @@ func SendMessage2Client(clientId string, sendUserId string, code int, msg string
 	return
 }
 
-//关闭客户端
+// 关闭客户端
 func CloseClient(clientId, systemId string) {
 	if util.IsCluster() {
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
@@ -95,7 +98,7 @@ func CloseClient(clientId, systemId string) {
 	return
 }
 
-//添加客户端到分组
+// 添加客户端到分组
 func AddClient2Group(systemId string, groupName string, clientId string, userId string, extend string) {
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
@@ -125,7 +128,7 @@ func AddClient2Group(systemId string, groupName string, clientId string, userId 
 	}
 }
 
-//发送信息到指定分组
+// 发送信息到指定分组
 func SendMessage2Group(systemId, sendUserId, groupName string, code int, msg string, data *string) (messageId string) {
 	messageId = util.GenUUID()
 	if util.IsCluster() {
@@ -138,7 +141,7 @@ func SendMessage2Group(systemId, sendUserId, groupName string, code int, msg str
 	return
 }
 
-//发送信息到指定系统
+// 发送信息到指定系统
 func SendMessage2System(systemId, sendUserId string, code int, msg string, data string) {
 	messageId := util.GenUUID()
 	if util.IsCluster() {
@@ -150,7 +153,7 @@ func SendMessage2System(systemId, sendUserId string, code int, msg string, data 
 	}
 }
 
-//获取分组列表
+// 获取分组列表
 func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 	var clientList []string
 	if util.IsCluster() {
@@ -168,7 +171,7 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 	}
 }
 
-//通过本服务器发送信息
+// 通过本服务器发送信息
 func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code int, msg string, data *string) {
 	log.WithFields(log.Fields{
 		"host":     setting.GlobalSetting.LocalHost,
@@ -179,7 +182,7 @@ func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code
 	return
 }
 
-//发送关闭信号
+// 发送关闭信号
 func CloseLocalClient(clientId, systemId string) {
 	if conn, err := Manager.GetByClientId(clientId); err == nil && conn != nil {
 		if conn.SystemId != systemId {
@@ -195,7 +198,7 @@ func CloseLocalClient(clientId, systemId string) {
 	return
 }
 
-//监听并发送给客户端信息
+// 监听并发送给客户端信息
 func WriteMessage() {
 	for {
 		clientInfo := <-ToClientChan
@@ -233,7 +236,7 @@ func Render(conn *websocket.Conn, messageId string, sendUserId string, code int,
 	})
 }
 
-//启动定时器进行心跳检测
+// 启动定时器进行心跳检测
 func PingTimer() {
 	go func() {
 		ticker := time.NewTicker(heartbeatInterval)

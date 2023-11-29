@@ -2,10 +2,11 @@ package send2client
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/woodylan/go-websocket/api"
 	"github.com/woodylan/go-websocket/define/retcode"
 	"github.com/woodylan/go-websocket/servers"
-	"net/http"
 )
 
 type Controller struct {
@@ -14,7 +15,7 @@ type Controller struct {
 type inputData struct {
 	ClientId   string `json:"clientId" validate:"required"`
 	SendUserId string `json:"sendUserId"`
-	Code       int    `json:"code"`
+	Code       int    `json:"type"`
 	Msg        string `json:"msg"`
 	Data       string `json:"data"`
 }
