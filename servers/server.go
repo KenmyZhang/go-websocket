@@ -23,6 +23,13 @@ type clientInfo struct {
 	Data       *string
 }
 
+func (o *clientInfo) GetData() string {
+	if o.Data == nil {
+		return ""
+	}
+	return *o.Data
+}
+
 type RetData struct {
 	MessageId  string `json:"messageId"`
 	SendUserId string `json:"-"`
@@ -213,7 +220,7 @@ func WriteMessage() {
 			"sendUserId": clientInfo.SendUserId,
 			"code":       clientInfo.Code,
 			"msg":        clientInfo.Msg,
-			"data":       clientInfo.Data,
+			"data":       clientInfo.GetData(),
 		}).Info("发送到本机")
 		if conn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && conn != nil {
 			if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
