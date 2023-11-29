@@ -163,7 +163,7 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
-
+	log.WithFields(log.Fields{"数量": len(manager.ClientIdMap)}).Info("连接数的数量")
 	if client, ok := manager.ClientIdMap[clientId]; !ok {
 		return nil, errors.New("客户端不存在")
 	} else {

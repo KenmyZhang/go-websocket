@@ -231,7 +231,11 @@ func WriteMessage() {
 					"clientId": clientInfo.ClientId,
 					"msg":      clientInfo.Msg,
 				}).Error("客户端异常离线：" + err.Error())
+			} else {
+				log.WithFields(log.Fields{"messageId": clientInfo.MessageId}).Info("发送成功")
 			}
+		} else {
+			log.WithFields(log.Fields{"err": err, "messageId": clientInfo.MessageId}).Info("发送失败")
 		}
 	}
 }
