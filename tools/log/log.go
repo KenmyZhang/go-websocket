@@ -1,14 +1,17 @@
 package log
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
+
+	//	zzxHook "github.com/woodylan/go-websocket/hooks"
 	"github.com/woodylan/go-websocket/pkg/setting"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 func Setup() {
@@ -45,11 +48,13 @@ func Setup() {
 			"host": setting.GlobalSetting.LocalHost,
 		},
 	})
-	//logrus.SetReportCaller(true) //是否记录代码位置
+
+	//logrus.AddHook(zzxHook.NewContextHook())
+	logrus.SetReportCaller(true) //是否记录代码位置
 	logrus.AddHook(lfHook)
 }
 
-//获取当前程序运行的文件夹
+// 获取当前程序运行的文件夹
 func getCurrentDirectory() string {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	return strings.Replace(dir, "\\", "/", -1)
