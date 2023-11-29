@@ -3,6 +3,7 @@ package servers
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,8 +16,9 @@ import (
 
 // 连接管理
 type ClientManager struct {
-	ClientIdMap     map[string]*Client // 全部的连接
-	ClientIdMapLock sync.RWMutex       // 读写锁
+	ClientIdMap        map[string]*Client // 全部的连接
+	PlatformAccountMap map[string][]string
+	ClientIdMapLock    sync.RWMutex // 读写锁
 
 	Connect    chan *Client // 连接处理
 	DisConnect chan *Client // 断开连接处理
@@ -105,7 +107,19 @@ func (manager *ClientManager) AddClient(client *Client) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
 
-	manager.ClientIdMap[client.ClientId] = client
+	if _, ok := manager.ClientIdMap[client.ClientId]; !ok {
+		log.WithFields(log.Fields{"client_id": client.ClientId}).Info("重复添加客户端")
+		manager.ClientIdMap[client.ClientId] = client
+
+		tmpClientInfos := strings.Split(client.ClientId, "-")
+		if len(tmpClientInfos) >= 3 {
+			log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[12]]}).Info("添加客户端前")
+			manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]] = append(manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]], client.ClientId)
+			log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]]}).Info("添加客户端后")
+		}
+	} else {
+		log.WithFields(log.Fields{"client_id": client.ClientId}).Info("重复添加客户端")
+	}
 }
 
 // 获取所有的客户端
@@ -155,8 +169,36 @@ func (manager *ClientManager) DelClient(client *Client) {
 func (manager *ClientManager) delClientIdMap(clientId string) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
-
 	delete(manager.ClientIdMap, clientId)
+	log.WithFields(log.Fields{"client_id": clientId}).Info("删除clientIdMap")
+
+	tmpClientInfos := strings.Split(clientId, "-")
+	if len(tmpClientInfos) >= 3 {
+		log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]]}).Info("删除client前")
+		removeElement(manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[1]], clientId)
+		log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]]}).Info("删除client后")
+
+	}
+}
+
+// 账号在线数量
+func (manager *ClientManager) PlatformAccountCount(platform, account string) ([]string, int, error) {
+	manager.ClientIdMapLock.RLock()
+	defer manager.ClientIdMapLock.RUnlock()
+	log.WithFields(log.Fields{"数量": len(manager.PlatformAccountMap[platform+"_"+account])}).Info("查询账户在线数量")
+	return manager.PlatformAccountMap[platform+"_"+account], len(manager.PlatformAccountMap[platform+"_"+account]), nil
+}
+
+func removeElement(nums []string, val string) []string {
+	var result []string
+
+	for _, num := range nums {
+		if num != val {
+			result = append(result, num)
+		}
+	}
+
+	return result
 }
 
 // 通过clientId获取

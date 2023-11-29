@@ -109,27 +109,8 @@ func CloseClient(clientId, systemId string) {
 }
 
 // 连接统计
-func ClientStatistics(platform, account string) (int64, error) {
-	if util.IsCluster() {
-		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
-		if err != nil {
-			log.Errorf("%s", err)
-			return
-		}
-
-		//如果是本机则发送到本机
-		if isLocal {
-			CloseLocalClient(clientId, systemId)
-		} else {
-			//发送到指定机器
-			CloseRpcClient(addr, clientId, systemId)
-		}
-	} else {
-		//如果是单机服务，则只发送到本机
-		CloseLocalClient(clientId, systemId)
-	}
-
-	return
+func ClientStatistics(platform, account string) ([]string, int, error) {
+	return Manager.PlatformAccountCount(platform, account)
 }
 
 // 添加客户端到分组
