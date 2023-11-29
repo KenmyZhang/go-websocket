@@ -42,9 +42,12 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	//解析参数
 	systemId := r.FormValue("systemId")
 	if len(systemId) == 0 {
-		_ = Render(conn, "", "", retcode.SYSTEM_ID_ERROR, "系统ID不能为空", []string{})
-		_ = conn.Close()
-		return
+		systemId = r.FormValue("token")
+		if len(systemId) == 0 {
+			_ = Render(conn, "", "", retcode.SYSTEM_ID_ERROR, "系统ID不能为空", []string{})
+			_ = conn.Close()
+			return
+		}
 	}
 
 	//clientId := util.GenClientId()
