@@ -358,7 +358,11 @@ func (manager *ClientManager) delSystemClient(client *Client) {
 
 	for index, clientId := range manager.SystemClients[client.SystemId] {
 		if clientId == client.ClientId {
-			manager.SystemClients[client.SystemId] = append(manager.SystemClients[client.SystemId][:index], manager.SystemClients[client.SystemId][index+1:]...)
+			if (index + 1) < len(manager.Groups) {
+				manager.SystemClients[client.SystemId] = append(manager.SystemClients[client.SystemId][:index], manager.SystemClients[client.SystemId][index+1:]...)
+			} else {
+				manager.SystemClients[client.SystemId] = manager.SystemClients[client.SystemId][:index]
+			}
 		}
 	}
 }
