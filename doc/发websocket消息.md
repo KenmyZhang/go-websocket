@@ -8,17 +8,23 @@
 
 ## 响应参数
 
-    Type 成功返回0，否则返回其它错误码
+    code 成功返回0，否则返回其它错误码
     msg 成功返回success，否则返回其它错误信息
     messageId 消息id
 
 ## Example
-curl -X POST "http://13.213.8.98:7800/api/send_to_client" -i -d '{"sendUserId":"123","clientId":"xxx", "data":"123", "type":1}'
-HTTP/1.1 200 OK
-Content-Type: application/json; charset=utf-8
-Date: Wed, 29 Nov 2023 16:08:35 GMT
-Content-Length: 66
+    curl -X POST "http://13.213.8.98:7800/api/send_to_client" -i -d '{"clientId":"xxx123", "data":"123", "type":"1"}'
+    HTTP/1.1 200 OK
+    Content-Type: application/json; charset=utf-8
+    Date: Wed, 29 Nov 2023 16:34:22 GMT
+    Content-Length: 66
 
-{"code":0,"msg":"success","data":{"messageId":"773347b489917248"}}
+    {
+        "code":0,
+        "msg":"success",
+        "data":{
+            "messageId":"af6c4055af578007"
+        }
+    }
 
 

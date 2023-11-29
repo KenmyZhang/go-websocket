@@ -7,4 +7,4 @@
 
 ## Example
 
-    ws://13.213.8.98:7800/ws?token=xxx 
+    ws://13.213.8.98:7800/ws?token=xxx123

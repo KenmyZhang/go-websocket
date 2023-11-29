@@ -1,14 +1,22 @@
+# websocket连接成功收到的event
+
+    {
+        "code":0,
+        "msg":"success",
+        "data":{
+            "clientId":"xxx123"
+        }
+    }
+
 # 接收消息的event结构
-    sendUserId ：发送方id
-    clientId：接收方id
-    data：消息内容
-    type: 消息类型
+    messageId: 消息ID
+    Data：消息内容
+    Type: 消息类型
 
 ## Example
 
     {
-        "messageId":"773347b489917248",
-        "sendUserId":"123",
-        "type":1,
-        "data":"123"
+        "messageId":"ce9d48f69d53a08c",
+        "Type":"1",
+        "Data":"123"
     }
