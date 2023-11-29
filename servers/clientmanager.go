@@ -316,7 +316,7 @@ func (manager *ClientManager) AddClient2SystemClient(systemId string, client *Cl
 	manager.SystemClientsLock.Lock()
 	defer manager.SystemClientsLock.Unlock()
 	manager.SystemClients[systemId] = append(manager.SystemClients[systemId], client.ClientId)
-	logrus.WithFields(log.Fields{"manager.SystemClients": manager.SystemClients}).Info("客户端列表")
+	logrus.WithFields(log.Fields{"count": len(manager.SystemClients)}).Info("客户端数量")
 }
 
 // 删除系统里的客户端
