@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/woodylan/go-websocket/api/bind2group"
+	"github.com/woodylan/go-websocket/api/clientstatistics"
 	"github.com/woodylan/go-websocket/api/closeclient"
 	"github.com/woodylan/go-websocket/api/getonlinelist"
 	"github.com/woodylan/go-websocket/api/register"
@@ -22,6 +23,8 @@ func Init() {
 	getGroupListHandler := &getonlinelist.Controller{}
 	closeClientHandler := &closeclient.Controller{}
 
+	clientstatisticsHandler := &clientstatistics.Controller{}
+
 	http.HandleFunc("/api/register", registerHandler.Run)
 	http.HandleFunc("/api/send_to_client", sendToClientHandler.Run)
 	http.HandleFunc("/api/send_to_clients", sendToClientsHandler.Run)
@@ -29,6 +32,7 @@ func Init() {
 	http.HandleFunc("/api/bind_to_group", bindToGroupHandler.Run)
 	http.HandleFunc("/api/get_online_list", getGroupListHandler.Run)
 	http.HandleFunc("/api/close_client", closeClientHandler.Run)
+	http.HandleFunc("/api/account/client/count", clientstatisticsHandler.Run)
 	//http.HandleFunc("/api/send_to_client", AccessTokenMiddleware(sendToClientHandler.Run))
 	//http.HandleFunc("/api/send_to_clients", AccessTokenMiddleware(sendToClientsHandler.Run))
 	//http.HandleFunc("/api/send_to_group", AccessTokenMiddleware(sendToGroupHandler.Run))
