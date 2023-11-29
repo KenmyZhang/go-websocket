@@ -2,15 +2,15 @@ package api
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+
 	zhongwen "github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	"github.com/woodylan/go-websocket/define/retcode"
 	"gopkg.in/go-playground/validator.v9"
 	zh2 "gopkg.in/go-playground/validator.v9/translations/zh"
-	"io"
-	"net/http"
 )
 
 type RetData struct {
@@ -19,11 +19,15 @@ type RetData struct {
 	Data interface{} `json:"data"`
 }
 
+type ConnSuc struct {
+	Type string `json:"Type"`
+	Data string `json:"Data"`
+}
+
 func ConnRender(conn *websocket.Conn, data interface{}) (err error) {
-	err = conn.WriteJSON(RetData{
-		Code: retcode.SUCCESS,
-		Msg:  "success",
-		Data: data,
+	err = conn.WriteJSON(ConnSuc{
+		Type: "Link",
+		Data: "连接成功",
 	})
 
 	return
