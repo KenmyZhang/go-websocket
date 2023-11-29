@@ -125,7 +125,18 @@ func (manager *ClientManager) Count() int {
 
 // 删除客户端
 func (manager *ClientManager) DelClient(client *Client) {
+	if client == nil {
+		logrus.Info("client已被删除")
+		return
+	}
+
+	if client.ClientId == "" {
+		logrus.Error("clientId无效")
+		return
+	}
+	logrus.WithFields(logrus.Fields{"client": client}).Info("待删除的客户端信息")
 	manager.delClientIdMap(client.ClientId)
+	logrus.WithFields(logrus.Fields{"client": client}).Info("删除clientmap")
 
 	//删除所在的分组
 	if len(client.GroupList) > 0 {
@@ -136,6 +147,8 @@ func (manager *ClientManager) DelClient(client *Client) {
 
 	// 删除系统里的客户端
 	manager.delSystemClient(client)
+	logrus.WithFields(logrus.Fields{"client": client}).Info("删除clientmap")
+
 }
 
 // 删除clientIdMap
