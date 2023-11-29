@@ -327,7 +327,11 @@ func (manager *ClientManager) delGroupClient(groupKey string, clientId string) {
 
 	for index, groupClientId := range manager.Groups[groupKey] {
 		if groupClientId == clientId {
-			manager.Groups[groupKey] = append(manager.Groups[groupKey][:index], manager.Groups[groupKey][index+1:]...)
+			if (index + 1) < len(manager.Groups) {
+				manager.Groups[groupKey] = append(manager.Groups[groupKey][:index], manager.Groups[groupKey][index+1:]...)
+			} else {
+				manager.Groups[groupKey] = manager.Groups[groupKey][:index]
+			}
 		}
 	}
 }
