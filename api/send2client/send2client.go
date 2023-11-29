@@ -15,7 +15,7 @@ type Controller struct {
 type inputData struct {
 	ClientId   string `json:"clientId" validate:"required"`
 	SendUserId string `json:"sendUserId"`
-	Code       int    `json:"type"`
+	Code       string `json:"type"`
 	Msg        string `json:"msg"`
 	Data       string `json:"data"`
 }

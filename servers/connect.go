@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/api"
-	"github.com/woodylan/go-websocket/define/retcode"
 )
 
 const (
@@ -45,7 +44,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	if len(systemId) == 0 {
 		systemId = r.FormValue("token")
 		if len(systemId) == 0 {
-			_ = Render(conn, "", "", retcode.SYSTEM_ID_ERROR, "系统ID不能为空", []string{})
+			_ = Render(conn, "", "", "retcode.SYSTEM_ID_ERROR", "系统ID不能为空", []string{})
 			_ = conn.Close()
 			return
 		}

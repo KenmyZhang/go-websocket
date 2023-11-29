@@ -172,7 +172,7 @@ func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 }
 
 // 发送到本机分组
-func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName string, code int, msg string, data *string) {
+func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName string, code string, msg string, data *string) {
 	if len(groupName) > 0 {
 		clientIds := manager.GetGroupClientList(util.GenGroupKey(systemId, groupName))
 		if len(clientIds) > 0 {
@@ -190,7 +190,7 @@ func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUs
 }
 
 // 发送给指定业务系统
-func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId string, sendUserId string, code int, msg string, data *string) {
+func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId string, sendUserId string, code string, msg string, data *string) {
 	if len(systemId) > 0 {
 		clientIds := Manager.GetSystemClientList(systemId)
 		if len(clientIds) > 0 {

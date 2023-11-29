@@ -18,7 +18,7 @@ type clientInfo struct {
 	ClientId   string
 	SendUserId string
 	MessageId  string
-	Code       int
+	Code       string
 	Msg        string
 	Data       *string
 }
@@ -26,7 +26,7 @@ type clientInfo struct {
 type RetData struct {
 	MessageId  string `json:"messageId"`
 	SendUserId string `json:"-"`
-	Code       int    `json:"Type"`
+	Code       string `json:"Type"`
 	Msg        string `json:"-"`
 	//Code       int         `json:"code"`
 	//Msg        string      `json:"msg"`
@@ -50,7 +50,7 @@ func StartWebSocket() {
 }
 
 // 发送信息到指定客户端
-func SendMessage2Client(clientId string, sendUserId string, code int, msg string, data *string) (messageId string) {
+func SendMessage2Client(clientId string, sendUserId string, code string, msg string, data *string) (messageId string) {
 	messageId = util.GenUUID()
 	if util.IsCluster() {
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
@@ -58,15 +58,18 @@ func SendMessage2Client(clientId string, sendUserId string, code int, msg string
 			log.Errorf("%s", err)
 			return
 		}
-
+		log.WithFields(log.Fields{"addr": addr, "isLocal": isLocal}).Info("发送到机器位置")
 		//如果是本机则发送到本机
 		if isLocal {
 			SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
 		} else {
-			//发送到指定机器
-			SendRpc2Client(addr, messageId, sendUserId, clientId, code, msg, data)
+			//发送到指定机器 TODO
+			log.WithFields(log.Fields{"addr": addr}).Info("发送到指定机器")
+			// SendRpc2Client(addr, messageId, sendUserId, clientId, code, msg, data)
 		}
 	} else {
+		log.WithFields(log.Fields{"data": data, "clientId": clientId, "sendUserId": sendUserId}).Info("单机发送")
+
 		//如果是单机服务，则只发送到本机
 		SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
 	}
@@ -136,7 +139,7 @@ func SendMessage2Group(systemId, sendUserId, groupName string, code int, msg str
 		go SendGroupBroadcast(systemId, messageId, sendUserId, groupName, code, msg, data)
 	} else {
 		//如果是单机服务，则只发送到本机
-		Manager.SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName, code, msg, data)
+		// TODO	Manager.SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName, code, msg, data)
 	}
 	return
 }
@@ -149,7 +152,7 @@ func SendMessage2System(systemId, sendUserId string, code int, msg string, data 
 		SendSystemBroadcast(systemId, messageId, sendUserId, code, msg, &data)
 	} else {
 		//如果是单机服务，则只发送到本机
-		Manager.SendMessage2LocalSystem(systemId, messageId, sendUserId, code, msg, &data)
+		// TODO Manager.SendMessage2LocalSystem(systemId, messageId, sendUserId, code, msg, &data)
 	}
 }
 
@@ -172,7 +175,7 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 }
 
 // 通过本服务器发送信息
-func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code int, msg string, data *string) {
+func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code string, msg string, data *string) {
 	log.WithFields(log.Fields{
 		"host":     setting.GlobalSetting.LocalHost,
 		"port":     setting.CommonSetting.HttpPort,
@@ -226,7 +229,7 @@ func WriteMessage() {
 	}
 }
 
-func Render(conn *websocket.Conn, messageId string, sendUserId string, code int, message string, data interface{}) error {
+func Render(conn *websocket.Conn, messageId string, sendUserId string, code string, message string, data interface{}) error {
 	return conn.WriteJSON(RetData{
 		Code:       code,
 		MessageId:  messageId,
