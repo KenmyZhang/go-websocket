@@ -223,7 +223,7 @@ func (manager *ClientManager) PlatformAccountCount(platform, account string) ([]
 	key := platform + "_" + account
 	log.WithFields(log.Fields{"client_ids": manager.PlatformAccountMap[key], "数量": len(manager.PlatformAccountMap[key]), "key": key}).Info("查询账户在线数量")
 	var result []string
-	copy(result, manager.PlatformAccountMap[key])
+	result = append(result, manager.PlatformAccountMap[key]...)
 	return result, len(result), nil
 }
 
