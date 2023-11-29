@@ -1,14 +1,10 @@
-FROM golang:1.13 AS build-dist
-ENV GOPROXY='https://mirrors.aliyun.com/goproxy'
-WORKDIR /data/release
-COPY . .
-RUN go build
+FROM centos
 
-FROM centos:latest as prod
-WORKDIR /data/go-websocket
-COPY --from=build-dist /data/release/go-websocket ./
-COPY --from=build-dist /data/release/conf /data/go-websocket/conf
+WORKDIR /opt/www/go-websocket
 
-EXPOSE 6000
+# 设定时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD ["/data/go-websocket/go-websocket","-c","./conf/app.ini"]
+CMD ["./go-websocket", "-c" ,"./conf/app.ini"]
+
