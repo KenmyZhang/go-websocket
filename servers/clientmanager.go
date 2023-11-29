@@ -209,7 +209,7 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 	log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[key],
 		"client_id": clientId,
 		"key":       key}).Info("删除client前")
-	removeElement(manager.PlatformAccountMap[key], clientId)
+	manager.PlatformAccountMap[key] = removeElement(manager.PlatformAccountMap[key], clientId)
 	log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[key],
 		"client_id": clientId,
 		"key":       key}).Info("删除client后")
