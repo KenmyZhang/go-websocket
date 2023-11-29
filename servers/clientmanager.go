@@ -111,7 +111,7 @@ func (manager *ClientManager) AddClient(client *Client) {
 		log.WithFields(log.Fields{"client_id": client.ClientId}).Info("重复添加客户端")
 		manager.ClientIdMap[client.ClientId] = client
 
-		tmpClientInfos := strings.Split(client.ClientId, "-")
+		tmpClientInfos := strings.Split(client.ClientId, "_")
 		if len(tmpClientInfos) < 2 {
 			log.Error("无效clientId")
 			return
@@ -190,7 +190,7 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 	delete(manager.ClientIdMap, clientId)
 	log.WithFields(log.Fields{"client_id": clientId}).Info("删除clientIdMap")
 
-	tmpClientInfos := strings.Split(clientId, "-")
+	tmpClientInfos := strings.Split(clientId, "_")
 	if len(tmpClientInfos) < 2 {
 		log.Error("无效clientId")
 		return
