@@ -1,12 +1,12 @@
 package servers
 
 import (
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/api"
 	"github.com/woodylan/go-websocket/define/retcode"
-	"github.com/woodylan/go-websocket/tools/util"
-	"net/http"
 )
 
 const (
@@ -47,7 +47,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientId := util.GenClientId()
+	//clientId := util.GenClientId()
+	clientId := systemId
 
 	clientSocket := NewClient(clientId, systemId, conn)
 
