@@ -340,6 +340,7 @@ func (manager *ClientManager) GetGroupClientList(groupKey string) []string {
 
 // 添加到系统客户端列表
 func (manager *ClientManager) AddClient2SystemClient(systemId string, client *Client) {
+	manager.AddClient(client)
 	manager.SystemClientsLock.Lock()
 	defer manager.SystemClientsLock.Unlock()
 	manager.SystemClients[systemId] = append(manager.SystemClients[systemId], client.ClientId)
