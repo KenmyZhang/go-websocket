@@ -112,15 +112,29 @@ func (manager *ClientManager) AddClient(client *Client) {
 		manager.ClientIdMap[client.ClientId] = client
 
 		tmpClientInfos := strings.Split(client.ClientId, "-")
-		if len(tmpClientInfos) >= 3 {
-			log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]],
-				"client_id": client.ClientId,
-				"key":       tmpClientInfos[0] + "_" + tmpClientInfos[2]}).Info("添加客户端前")
-			manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]] = append(manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]], client.ClientId)
-			log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]],
-				"client_id": client.ClientId,
-				"key":       tmpClientInfos[0] + "_" + tmpClientInfos[2]}).Info("添加客户端后")
+		if len(tmpClientInfos) < 2 {
+			log.Error("无效clientId")
+			return
 		}
+		var platform, account string
+		if len(tmpClientInfos) == 3 {
+			platform = tmpClientInfos[0]
+			account = tmpClientInfos[2]
+		}
+		if len(tmpClientInfos) == 2 {
+			platform = tmpClientInfos[0]
+			account = tmpClientInfos[1]
+		}
+
+		key := platform + "_" + account
+
+		log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[key],
+			"client_id": client.ClientId,
+			"key":       key}).Info("添加客户端前")
+		manager.PlatformAccountMap[key] = append(manager.PlatformAccountMap[key], client.ClientId)
+		log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[key],
+			"client_id": client.ClientId,
+			"key":       key}).Info("添加客户端后")
 	} else {
 		log.WithFields(log.Fields{"client_id": client.ClientId}).Info("重复添加客户端")
 	}
@@ -177,25 +191,38 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 	log.WithFields(log.Fields{"client_id": clientId}).Info("删除clientIdMap")
 
 	tmpClientInfos := strings.Split(clientId, "-")
-	if len(tmpClientInfos) >= 3 {
-		log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]],
-			"client_id": clientId,
-			"key":       tmpClientInfos[0] + "_" + tmpClientInfos[2]}).Info("删除client前")
-		removeElement(manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]], clientId)
-		log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[tmpClientInfos[0]+"_"+tmpClientInfos[2]],
-			"client_id": clientId,
-			"key":       tmpClientInfos[0] + "_" + tmpClientInfos[2]}).Info("删除client后")
-
+	if len(tmpClientInfos) < 2 {
+		log.Error("无效clientId")
+		return
 	}
+	var platform, account string
+	if len(tmpClientInfos) == 3 {
+		platform = tmpClientInfos[0]
+		account = tmpClientInfos[2]
+	}
+	if len(tmpClientInfos) == 2 {
+		platform = tmpClientInfos[0]
+		account = tmpClientInfos[1]
+	}
+	key := platform + "_" + account
+	log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[key],
+		"client_id": clientId,
+		"key":       key}).Info("删除client前")
+	removeElement(manager.PlatformAccountMap[key], clientId)
+	log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[key],
+		"client_id": clientId,
+		"key":       key}).Info("删除client后")
+
 }
 
 // 账号在线数量
 func (manager *ClientManager) PlatformAccountCount(platform, account string) ([]string, int, error) {
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
-	log.WithFields(log.Fields{"数量": len(manager.PlatformAccountMap[platform+"_"+account]), "key": platform + "_" + account}).Info("查询账户在线数量")
+	key := platform + "_" + account
+	log.WithFields(log.Fields{"数量": len(manager.PlatformAccountMap[key]), "key": key}).Info("查询账户在线数量")
 	var result []string
-	copy(result, manager.PlatformAccountMap[platform+"_"+account])
+	copy(result, manager.PlatformAccountMap[key])
 	return result, len(result), nil
 }
 
