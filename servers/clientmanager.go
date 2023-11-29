@@ -32,11 +32,12 @@ type ClientManager struct {
 
 func NewClientManager() (clientManager *ClientManager) {
 	clientManager = &ClientManager{
-		ClientIdMap:   make(map[string]*Client),
-		Connect:       make(chan *Client, 10000),
-		DisConnect:    make(chan *Client, 10000),
-		Groups:        make(map[string][]string, 100),
-		SystemClients: make(map[string][]string, 100),
+		PlatformAccountMap: make(map[string][]string),
+		ClientIdMap:        make(map[string]*Client),
+		Connect:            make(chan *Client, 10000),
+		DisConnect:         make(chan *Client, 10000),
+		Groups:             make(map[string][]string, 100),
+		SystemClients:      make(map[string][]string, 100),
 	}
 
 	return
