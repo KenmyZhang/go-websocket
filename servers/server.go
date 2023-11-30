@@ -270,6 +270,10 @@ func PingTimer() {
 		for {
 			<-ticker.C
 			//发送心跳
+			if Manager == nil {
+				logrus.Info("Manager为空，找不到客户端连接")
+				continue
+			}
 			for clientId, conn := range Manager.AllClient() {
 				if conn == nil {
 					logrus.WithFields(log.Fields{"client_id": clientId}).Info("客户端已经被下线删除")

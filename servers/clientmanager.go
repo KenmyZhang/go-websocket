@@ -154,8 +154,11 @@ func (manager *ClientManager) AddClient(client *Client) {
 func (manager *ClientManager) AllClient() map[string]*Client {
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
-
-	return manager.ClientIdMap
+	result := map[string]*Client{}
+	for key, value := range manager.ClientIdMap {
+		result[key] = value
+	}
+	return result
 }
 
 // 客户端数量
