@@ -2,6 +2,7 @@ package servers
 
 import (
 	"net/http"
+	"runtime/debug"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -260,6 +261,11 @@ func PingTimer() {
 	go func() {
 		ticker := time.NewTicker(heartbeatInterval)
 		defer ticker.Stop()
+		defer func() {
+			if r := recover(); r != nil {
+				log.WithFields(log.Fields{"debug": string(debug.Stack())}).Error("PingTimer失败")
+			}
+		}()
 		for {
 			<-ticker.C
 			//发送心跳
