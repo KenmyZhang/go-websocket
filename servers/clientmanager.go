@@ -74,6 +74,7 @@ func (manager *ClientManager) EventConnect(client *Client) {
 func (manager *ClientManager) EventDisconnect(client *Client) {
 	//关闭连接
 	_ = client.Socket.Close()
+	log.WithFields(log.Fields{"client_id": client.ClientId}).Info("关闭连接")
 	manager.DelClient(client)
 
 	mJson, _ := json.Marshal(map[string]string{
@@ -202,6 +203,10 @@ func (manager *ClientManager) DelClient(client *Client) {
 func (manager *ClientManager) delClientIdMap(clientId string) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
+	if _, ok := manager.ClientIdMap[clientId]; !ok {
+		log.WithFields(log.Fields{"client_id": clientId}).Info("已经从clientIdMap删除")
+		return
+	}
 	delete(manager.ClientIdMap, clientId)
 	log.WithFields(log.Fields{"client_id": clientId}).Info("删除clientIdMap")
 
@@ -220,7 +225,11 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 		account = tmpClientInfos[1]
 	}
 	key := platform + "_" + account
-	platformAccount := manager.PlatformAccountMap[key]
+	platformAccount, ok := manager.PlatformAccountMap[key]
+	if !ok {
+		log.WithFields(log.Fields{"key": key}).Info("已经从PlatformAccountMap删除")
+		return
+	}
 	log.WithFields(log.Fields{"账号在线数": platformAccount,
 		"client_id": clientId,
 		"key":       key}).Info("删除client前")
