@@ -80,7 +80,7 @@ func SendMessage2Client(clientId string, sendUserId string, code string, msg str
 		log.WithFields(log.Fields{"data": data, "clientId": clientId, "sendUserId": sendUserId}).Info("单机发送")
 
 		//如果是单机服务，则只发送到本机
-		SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
+		go SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
 	}
 
 	return
