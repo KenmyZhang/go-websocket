@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/pkg/setting"
 	"github.com/woodylan/go-websocket/tools/util"
@@ -270,6 +271,10 @@ func PingTimer() {
 			<-ticker.C
 			//发送心跳
 			for clientId, conn := range Manager.AllClient() {
+				if conn == nil {
+					logrus.WithFields(log.Fields{"client_id": clientId}).Info("客户端已经被下线删除")
+					continue
+				}
 				if err := conn.Socket.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(time.Second)); err != nil {
 					Manager.DisConnect <- conn
 					log.Errorf("发送心跳失败: %s 总连接数：%d", clientId, Manager.Count())
