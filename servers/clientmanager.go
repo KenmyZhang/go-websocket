@@ -169,9 +169,9 @@ func (manager *ClientManager) DelClient(client *Client) {
 		logrus.Error("clientId无效")
 		return
 	}
-	logrus.WithFields(logrus.Fields{"client": client}).Info("待删除的客户端信息")
+	logrus.WithFields(logrus.Fields{"ClientId": client.ClientId}).Info("待删除的客户端信息")
 	manager.delClientIdMap(client.ClientId)
-	logrus.WithFields(logrus.Fields{"client": client}).Info("删除clientmap")
+	logrus.WithFields(logrus.Fields{"ClientId": client.ClientId}).Info("删除clientmap")
 
 	//删除所在的分组
 	if len(client.GroupList) > 0 {
@@ -182,7 +182,7 @@ func (manager *ClientManager) DelClient(client *Client) {
 
 	// 删除系统里的客户端
 	manager.delSystemClient(client)
-	logrus.WithFields(logrus.Fields{"client": client}).Info("删除clientmap")
+	logrus.WithFields(logrus.Fields{"ClientId": client.ClientId}).Info("删除clientmap")
 
 }
 
