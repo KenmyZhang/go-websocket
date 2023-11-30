@@ -3,6 +3,7 @@ package servers
 import (
 	"encoding/json"
 	"errors"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -105,6 +106,11 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 
 // 添加客户端
 func (manager *ClientManager) AddClient(client *Client) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.WithFields(log.Fields{"debug": string(debug.Stack())}).Error("AddClient失败")
+		}
+	}()
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
 
@@ -160,6 +166,12 @@ func (manager *ClientManager) Count() int {
 
 // 删除客户端
 func (manager *ClientManager) DelClient(client *Client) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.WithFields(log.Fields{"debug": string(debug.Stack())}).Error("DelClient失败")
+		}
+	}()
+
 	if client == nil {
 		logrus.Info("client已被删除")
 		return
