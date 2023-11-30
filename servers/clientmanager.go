@@ -128,12 +128,14 @@ func (manager *ClientManager) AddClient(client *Client) {
 		}
 
 		key := platform + "_" + account
-
-		log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[key],
+		platformAccounts := manager.PlatformAccountMap[key]
+		log.WithFields(log.Fields{"在线账号": platformAccounts,
 			"client_id": client.ClientId,
 			"key":       key}).Info("添加客户端前")
 		manager.PlatformAccountMap[key] = append(manager.PlatformAccountMap[key], client.ClientId)
-		log.WithFields(log.Fields{"在线账号": manager.PlatformAccountMap[key],
+
+		platformAccounts = manager.PlatformAccountMap[key]
+		log.WithFields(log.Fields{"在线账号": platformAccounts,
 			"client_id": client.ClientId,
 			"key":       key}).Info("添加客户端后")
 	} else {
@@ -206,11 +208,13 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 		account = tmpClientInfos[1]
 	}
 	key := platform + "_" + account
-	log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[key],
+	platformAccount := manager.PlatformAccountMap[key]
+	log.WithFields(log.Fields{"账号在线数": platformAccount,
 		"client_id": clientId,
 		"key":       key}).Info("删除client前")
 	manager.PlatformAccountMap[key] = removeElement(manager.PlatformAccountMap[key], clientId)
-	log.WithFields(log.Fields{"账号在线数": manager.PlatformAccountMap[key],
+	platformAccount = manager.PlatformAccountMap[key]
+	log.WithFields(log.Fields{"账号在线数": platformAccount,
 		"client_id": clientId,
 		"key":       key}).Info("删除client后")
 
@@ -221,7 +225,8 @@ func (manager *ClientManager) PlatformAccountCount(platform, account string) ([]
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
 	key := platform + "_" + account
-	log.WithFields(log.Fields{"client_ids": manager.PlatformAccountMap[key], "数量": len(manager.PlatformAccountMap[key]), "key": key}).Info("查询账户在线数量")
+	platformAccounts := manager.PlatformAccountMap[key]
+	log.WithFields(log.Fields{"client_ids": platformAccounts, "数量": len(platformAccounts), "key": key}).Info("查询账户在线数量")
 	var result []string
 	result = append(result, manager.PlatformAccountMap[key]...)
 	return result, len(result), nil
