@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 type Client struct {
@@ -36,6 +37,10 @@ func NewClient(clientId string, systemId string, socket *websocket.Conn) *Client
 func (c *Client) Read() {
 	go func() {
 		for {
+			if c.Socket == nil {
+				logrus.Error("无效socket")
+				return
+			}
 			messageType, _, err := c.Socket.ReadMessage()
 			if err != nil {
 				if messageType == -1 && websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
