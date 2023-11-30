@@ -116,7 +116,7 @@ func (manager *ClientManager) AddClient(client *Client) {
 	defer manager.ClientIdMapLock.Unlock()
 
 	if _, ok := manager.ClientIdMap[client.ClientId]; !ok {
-		log.WithFields(log.Fields{"client_id": client.ClientId}).Info("重复添加客户端")
+		log.WithFields(log.Fields{"client_id": client.ClientId}).Info("添加客户端")
 		manager.ClientIdMap[client.ClientId] = client
 
 		tmpClientInfos := strings.Split(client.ClientId, "_")
@@ -135,13 +135,13 @@ func (manager *ClientManager) AddClient(client *Client) {
 		}
 
 		key := platform + "_" + account
-		platformAccounts := manager.PlatformAccountMap[key]
+		platformAccounts := len(manager.PlatformAccountMap[key])
 		log.WithFields(log.Fields{"在线账号": platformAccounts,
 			"client_id": client.ClientId,
 			"key":       key}).Info("添加客户端前")
 		manager.PlatformAccountMap[key] = append(manager.PlatformAccountMap[key], client.ClientId)
 
-		platformAccounts = manager.PlatformAccountMap[key]
+		platformAccounts = len(manager.PlatformAccountMap[key])
 		log.WithFields(log.Fields{"在线账号": platformAccounts,
 			"client_id": client.ClientId,
 			"key":       key}).Info("添加客户端后")
@@ -179,7 +179,7 @@ func (manager *ClientManager) DelClient(client *Client) {
 	}
 
 	if client.ClientId == "" {
-		logrus.Error("clientId无效")
+		logrus.WithFields(log.Fields{"client_id": client.ClientId}).Error("clientId无效")
 		return
 	}
 	logrus.WithFields(logrus.Fields{"ClientId": client.ClientId}).Info("待删除的客户端信息")
@@ -230,12 +230,13 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 		log.WithFields(log.Fields{"key": key}).Info("已经从PlatformAccountMap删除")
 		return
 	}
-	log.WithFields(log.Fields{"账号在线数": platformAccount,
+	count := len(platformAccount)
+	log.WithFields(log.Fields{"账号在线数": count,
 		"client_id": clientId,
 		"key":       key}).Info("删除client前")
 	manager.PlatformAccountMap[key] = removeElement(manager.PlatformAccountMap[key], clientId)
-	platformAccount = manager.PlatformAccountMap[key]
-	log.WithFields(log.Fields{"账号在线数": platformAccount,
+	count = len(manager.PlatformAccountMap[key])
+	log.WithFields(log.Fields{"账号在线数": count,
 		"client_id": clientId,
 		"key":       key}).Info("删除client后")
 
@@ -246,8 +247,8 @@ func (manager *ClientManager) PlatformAccountCount(platform, account string) ([]
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
 	key := platform + "_" + account
-	platformAccounts := manager.PlatformAccountMap[key]
-	log.WithFields(log.Fields{"client_ids": platformAccounts, "数量": len(platformAccounts), "key": key}).Info("查询账户在线数量")
+	count := len(manager.PlatformAccountMap[key])
+	log.WithFields(log.Fields{"数量": count, "key": key}).Info("查询账户在线数量")
 	var result []string
 	result = append(result, manager.PlatformAccountMap[key]...)
 	return result, len(result), nil
@@ -269,7 +270,8 @@ func removeElement(nums []string, val string) []string {
 func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
-	log.WithFields(log.Fields{"数量": len(manager.ClientIdMap)}).Info("连接数的数量")
+	count := len(manager.ClientIdMap)
+	log.WithFields(log.Fields{"数量": count}).Info("连接数的数量")
 	if client, ok := manager.ClientIdMap[clientId]; !ok {
 		return nil, errors.New("客户端不存在")
 	} else {
@@ -375,7 +377,8 @@ func (manager *ClientManager) AddClient2SystemClient(systemId string, client *Cl
 	manager.SystemClientsLock.Lock()
 	defer manager.SystemClientsLock.Unlock()
 	manager.SystemClients[systemId] = append(manager.SystemClients[systemId], client.ClientId)
-	logrus.WithFields(log.Fields{"count": len(manager.SystemClients)}).Info("客户端数量")
+	clientCount := len(manager.SystemClients)
+	logrus.WithFields(log.Fields{"count": clientCount}).Info("客户端数量")
 }
 
 // 删除系统里的客户端
