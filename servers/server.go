@@ -191,9 +191,10 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 // 通过本服务器发送信息
 func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code string, msg string, data *string) {
 	log.WithFields(log.Fields{
-		"host":     setting.GlobalSetting.LocalHost,
-		"port":     setting.CommonSetting.HttpPort,
-		"clientId": clientId,
+		"host":      setting.GlobalSetting.LocalHost,
+		"port":      setting.CommonSetting.HttpPort,
+		"messageId": messageId,
+		"clientId":  clientId,
 	}).Info("发送到通道")
 	ToClientChan <- clientInfo{ClientId: clientId, MessageId: messageId, SendUserId: sendUserId, Code: code, Msg: msg, Data: data}
 	return
@@ -233,16 +234,25 @@ func WriteMessage() {
 			if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 				Manager.DisConnect <- conn
 				log.WithFields(log.Fields{
-					"host":     setting.GlobalSetting.LocalHost,
-					"port":     setting.CommonSetting.HttpPort,
-					"clientId": clientInfo.ClientId,
-					"msg":      clientInfo.Msg,
+					"host":      setting.GlobalSetting.LocalHost,
+					"port":      setting.CommonSetting.HttpPort,
+					"messageId": clientInfo.MessageId,
+					"clientId":  clientInfo.ClientId,
+					"msg":       clientInfo.Msg,
 				}).Error("客户端异常离线：" + err.Error())
 			} else {
-				log.WithFields(log.Fields{"messageId": clientInfo.MessageId}).Info("发送成功")
+				log.WithFields(log.Fields{
+					"messageId": clientInfo.MessageId,
+					"host":      setting.GlobalSetting.LocalHost,
+					"port":      setting.CommonSetting.HttpPort,
+					"clientId":  clientInfo.ClientId}).Info("发送成功")
 			}
 		} else {
-			log.WithFields(log.Fields{"err": err, "messageId": clientInfo.MessageId}).Info("发送失败")
+			log.WithFields(log.Fields{"err": err,
+				"messageId": clientInfo.MessageId,
+				"host":      setting.GlobalSetting.LocalHost,
+				"port":      setting.CommonSetting.HttpPort,
+				"clientId":  clientInfo.ClientId}).Info("发送失败")
 		}
 	}
 }

@@ -70,4 +70,29 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	// 用户连接事件
 	Manager.Connect <- clientSocket
 	logger.Info("用户连接事件发送成功")
+
+	for {
+		//接受消息
+		//var receive []byte
+		messageType, receive, err := conn.ReadMessage()
+		if err != nil {
+			logrus.WithFields(log.Fields{"messageType": messageType, "err": err}).Info("客户端下线")
+			conn.Close()
+			return
+		}
+
+		logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive)}).Info("收到客户端心跳消息")
+		//if messageType == "KeepLive" {
+		//	conn.WriteJSON(TypeMessage{
+		//		Type: "KeepLive",
+		//		Data: "Succeed",
+		//	})
+		//}
+
+	}
+}
+
+type TypeMessage struct {
+	Type interface{} `json:"Type"`
+	Data interface{} `json:"Data"`
 }
