@@ -3,7 +3,9 @@ package servers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -66,39 +68,56 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		_ = conn.Close()
 		return
 	}
-
+	go handleConnection(r.RemoteAddr, conn)
 	logger.Info("开始发送用户连接事件")
 	// 用户连接事件
 	Manager.Connect <- clientSocket
 	logger.Info("用户连接事件发送成功")
 
-	for {
-		//接受消息
-		//var receive []byte
-		messageType, receive, err := conn.ReadMessage()
-		if err != nil {
-			logrus.WithFields(log.Fields{"messageType": messageType, "err": err}).Info("客户端下线")
-			conn.Close()
-			return
-		}
+}
 
-		logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": r.RemoteAddr}).Info("收到客户端心跳消息")
-		if messageType == 1 {
+func handleConnection(clientAddr string, conn *websocket.Conn) {
+	traceId := uuid.New()
+	logger := logrus.WithFields(log.Fields{"trace_id": traceId})
+	// 每隔一段时间定期发送心跳消息
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			// 发送心跳消息
+			if err := conn.WriteMessage(websocket.TextMessage, []byte("Heartbeat")); err != nil {
+				log.Println("write:", err)
+				return
+			}
+		default:
+			// 读取客户端的消息
+			messageType, receive, err := conn.ReadMessage()
+			if err != nil {
+				log.Println("read:", err)
+				return
+			}
+
 			var typeMsg TypeMessage
 			json.Unmarshal(receive, &typeMsg)
 			if typeMsg.Type == "KeepLive" {
-				err = conn.WriteJSON(api.ConnSuc{
+				data := api.ConnSuc{
 					Type: "KeepLive",
 					Data: "Succeed",
-				})
-				if err != nil {
-					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": r.RemoteAddr}).Info("Pong失败")
-				} else {
-					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": r.RemoteAddr}).Info("Pong成功")
 				}
+				strData, _ := json.Marshal(&data)
+				//err = conn.WriteJSON(data)
+				conn.WriteMessage(websocket.TextMessage, strData)
+				if err != nil {
+					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong失败")
+				} else {
+					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong成功")
+				}
+			} else {
+				logger.WithFields(log.Fields{"client_ip": clientAddr}).Info("其它类型消息")
 			}
 		}
-
 	}
 }
 
