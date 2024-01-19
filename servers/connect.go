@@ -88,14 +88,15 @@ func handleConnection(clientAddr string, conn *websocket.Conn) {
 		case <-ticker.C:
 			// 发送心跳消息
 			if err := conn.WriteMessage(websocket.TextMessage, []byte("Heartbeat")); err != nil {
-				log.Println("write:", err)
+				logger.Println("write:", err)
 				return
 			}
+			logger.WithFields(log.Fields{"addr": clientAddr}).Info("发送心跳")
 		default:
 			// 读取客户端的消息
 			messageType, receive, err := conn.ReadMessage()
 			if err != nil {
-				log.Println("read:", err)
+				logger.Println("read:", err)
 				return
 			}
 
@@ -110,9 +111,9 @@ func handleConnection(clientAddr string, conn *websocket.Conn) {
 				//err = conn.WriteJSON(data)
 				conn.WriteMessage(websocket.TextMessage, strData)
 				if err != nil {
-					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong失败")
+					logger.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong失败")
 				} else {
-					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong成功")
+					logger.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong成功")
 				}
 			} else {
 				logger.WithFields(log.Fields{"client_ip": clientAddr}).Info("其它类型消息")
