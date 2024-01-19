@@ -87,12 +87,14 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 			var typeMsg TypeMessage
 			json.Unmarshal(receive, &typeMsg)
 			if typeMsg.Type == "KeepLive" {
-				err = conn.WriteJSON(TypeMessage{
+				err = conn.WriteJSON(api.ConnSuc{
 					Type: "KeepLive",
 					Data: "Succeed",
 				})
 				if err != nil {
 					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": r.RemoteAddr}).Info("Pong失败")
+				} else {
+					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": r.RemoteAddr}).Info("Pong成功")
 				}
 			}
 		}
