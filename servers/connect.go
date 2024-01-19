@@ -94,6 +94,7 @@ func handleConnection(clientAddr string, conn *websocket.Conn) {
 			logger.WithFields(log.Fields{"addr": clientAddr}).Info("发送心跳")
 		default:
 			// 读取客户端的消息
+			logger.WithFields(log.Fields{"addr": clientAddr}).Info("读取客户端信息")
 			messageType, receive, err := conn.ReadMessage()
 			if err != nil {
 				logger.Println("read:", err)
