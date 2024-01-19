@@ -1,10 +1,14 @@
 package servers
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"github.com/woodylan/go-websocket/api"
 )
 
 type Client struct {
@@ -34,14 +38,16 @@ func NewClient(clientId string, systemId string, socket *websocket.Conn) *Client
 	}
 }
 
-func (c *Client) Read() {
+func (c *Client) Read(clientAddr string) {
+	traceId := uuid.New()
+	logger := logrus.WithFields(log.Fields{"trace_id": traceId})
 	go func() {
 		for {
 			if c.Socket == nil {
 				logrus.Error("无效socket")
 				return
 			}
-			messageType, _, err := c.Socket.ReadMessage()
+			messageType, receive, err := c.Socket.ReadMessage()
 			if err != nil {
 				if messageType == -1 && websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
 					Manager.DisConnect <- c
@@ -50,6 +56,25 @@ func (c *Client) Read() {
 					return
 				}
 			}
+
+			var typeMsg TypeMessage
+			json.Unmarshal(receive, &typeMsg)
+			if typeMsg.Type == "KeepLive" {
+				data := api.ConnSuc{
+					Type: "KeepLive",
+					Data: "Succeed",
+				}
+				strData, _ := json.Marshal(&data)
+				c.Socket.WriteMessage(websocket.TextMessage, strData)
+				if err != nil {
+					logger.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong失败")
+				} else {
+					logger.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong成功")
+				}
+			} else {
+				logger.WithFields(log.Fields{"client_ip": clientAddr}).Info("其它类型消息")
+			}
+
 		}
 	}()
 }
