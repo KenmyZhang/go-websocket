@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -81,13 +82,20 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive)}).Info("收到客户端心跳消息")
-		//if messageType == "KeepLive" {
-		//	conn.WriteJSON(TypeMessage{
-		//		Type: "KeepLive",
-		//		Data: "Succeed",
-		//	})
-		//}
+		logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": r.RemoteAddr}).Info("收到客户端心跳消息")
+		if messageType == 1 {
+			var typeMsg TypeMessage
+			json.Unmarshal(receive, &typeMsg)
+			if typeMsg.Type == "KeepLive" {
+				err = conn.WriteJSON(TypeMessage{
+					Type: "KeepLive",
+					Data: "Succeed",
+				})
+				if err != nil {
+					logrus.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": r.RemoteAddr}).Info("Pong失败")
+				}
+			}
+		}
 
 	}
 }
