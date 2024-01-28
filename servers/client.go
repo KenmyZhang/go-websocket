@@ -68,8 +68,6 @@ func (c *Client) Read(clientAddr string) {
 				c.Socket.WriteMessage(websocket.TextMessage, strData)
 				if err != nil {
 					logger.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong失败")
-				} else {
-					logger.WithFields(log.Fields{"messageType": messageType, "receive": string(receive), "client_ip": clientAddr}).Info("Pong成功")
 				}
 			} else {
 				logger.WithFields(log.Fields{"client_ip": clientAddr}).Info("其它类型消息")

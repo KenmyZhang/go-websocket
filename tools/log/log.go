@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/pkg/errors"
@@ -19,8 +20,8 @@ func Setup() {
 
 	writer, err := rotatelogs.New(
 		basePath+"/log/info/"+"%Y-%m-%d"+".log",
-		rotatelogs.WithLinkName("log.log"), // 生成软链，指向最新日志文件
-		//rotatelogs.WithMaxAge(maxAge),      // 文件最大保存时间
+		rotatelogs.WithLinkName("log.log"),  // 生成软链，指向最新日志文件
+		rotatelogs.WithMaxAge(72*time.Hour), // 文件最大保存时间
 	)
 	if err != nil {
 		logrus.Errorf("config local file system logger error. %+v", errors.WithStack(err))
