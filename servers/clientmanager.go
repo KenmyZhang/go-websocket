@@ -131,7 +131,7 @@ func (manager *ClientManager) AddClient(client *Client) {
 	for addr := range addrToClientMap {
 		log.WithFields(log.Fields{"client_id": client.ClientId, "已有的地址": addr, "待添加的地址": client.Addr}).Info("client_id原有的conn")
 	}
-	if _, ok := manager.ClientIdMap[client.ClientId]; !ok {
+	if len(addrToClientMap) < 2 {
 		log.WithFields(log.Fields{"client_id": client.ClientId, "addr": client.Addr}).Info("添加客户端")
 
 		tmpClientInfos := strings.Split(client.ClientId, "_")
