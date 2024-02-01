@@ -234,6 +234,7 @@ func WriteMessage() {
 			"data":       clientInfo.GetData(),
 		}).Info("发送到本机")
 		if addrToConn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && addrToConn != nil {
+			log.WithFields(log.Fields{"addrToConn": addrToConn}).Info("同一client_id对应的所有client")
 			for addr, conn := range addrToConn {
 				if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 					Manager.DisConnect <- conn
