@@ -119,16 +119,20 @@ func (manager *ClientManager) AddClient(client *Client) {
 	defer manager.ClientIdMapLock.Unlock()
 
 	addrToClientMap, ok := manager.ClientIdMap[client.ClientId]
-	if !ok {
-		addrToClientMap = make(map[string]*Client)
-		manager.ClientIdMap[client.ClientId] = addrToClientMap
+	if ok {
+		addrToClientMap[client.Addr] = client
+		return
 	}
+
+	addrToClientMap = make(map[string]*Client)
+	manager.ClientIdMap[client.ClientId] = addrToClientMap
+	addrToClientMap[client.Addr] = client
+
 	for addr := range addrToClientMap {
 		log.WithFields(log.Fields{"client_id": client.ClientId, "已有的地址": addr, "待添加的地址": client.Addr}).Info("client_id原有的conn")
 	}
-	if _, ok := addrToClientMap[client.Addr]; !ok {
+	if _, ok := manager.ClientIdMap[client.ClientId]; !ok {
 		log.WithFields(log.Fields{"client_id": client.ClientId, "addr": client.Addr}).Info("添加客户端")
-		addrToClientMap[client.Addr] = client
 
 		tmpClientInfos := strings.Split(client.ClientId, "_")
 		if len(tmpClientInfos) < 2 {
