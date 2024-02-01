@@ -13,7 +13,7 @@ import (
 )
 
 // channel通道
-var ToClientChan chan clientInfo
+var ToClientChan = make(chan clientInfo, 10000)
 
 // channel通道结构体
 type clientInfo struct {
