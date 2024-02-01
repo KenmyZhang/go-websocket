@@ -17,7 +17,7 @@ import (
 
 // 连接管理
 type ClientManager struct {
-	ClientIdMap        map[string]*Client // 全部的连接
+	ClientIdMap        map[string]map[string]*Client // 全部的连接
 	PlatformAccountMap map[string][]string
 	ClientIdMapLock    sync.RWMutex // 读写锁
 
@@ -34,7 +34,7 @@ type ClientManager struct {
 func NewClientManager() (clientManager *ClientManager) {
 	clientManager = &ClientManager{
 		PlatformAccountMap: make(map[string][]string),
-		ClientIdMap:        make(map[string]*Client),
+		ClientIdMap:        make(map[string]map[string]*Client),
 		Connect:            make(chan *Client, 10000),
 		DisConnect:         make(chan *Client, 10000),
 		Groups:             make(map[string][]string, 100),
@@ -66,6 +66,7 @@ func (manager *ClientManager) EventConnect(client *Client) {
 		"host":     setting.GlobalSetting.LocalHost,
 		"port":     setting.CommonSetting.HttpPort,
 		"clientId": client.ClientId,
+		"addr":     client.Addr,
 		"counts":   Manager.Count(),
 	}).Info("客户端已连接")
 }
@@ -80,6 +81,7 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	mJson, _ := json.Marshal(map[string]string{
 		"clientId": client.ClientId,
 		"userId":   client.UserId,
+		"addr":     client.Addr,
 		"extend":   client.Extend,
 	})
 	data := string(mJson)
@@ -96,6 +98,7 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 		"host":     setting.GlobalSetting.LocalHost,
 		"port":     setting.CommonSetting.HttpPort,
 		"clientId": client.ClientId,
+		"addr":     client.Addr,
 		"counts":   Manager.Count(),
 		"seconds":  uint64(time.Now().Unix()) - client.ConnectTime,
 	}).Info("客户端已断开")
@@ -115,9 +118,14 @@ func (manager *ClientManager) AddClient(client *Client) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
 
-	if _, ok := manager.ClientIdMap[client.ClientId]; !ok {
-		log.WithFields(log.Fields{"client_id": client.ClientId}).Info("添加客户端")
-		manager.ClientIdMap[client.ClientId] = client
+	addrToClientMap, ok := manager.ClientIdMap[client.ClientId]
+	if !ok {
+		addrToClientMap = make(map[string]*Client)
+		manager.ClientIdMap[client.ClientId] = addrToClientMap
+	}
+	if _, ok := addrToClientMap[client.Addr]; !ok {
+		log.WithFields(log.Fields{"client_id": client.ClientId, "addr": client.Addr}).Info("添加客户端")
+		addrToClientMap[client.ClientId] = client
 
 		tmpClientInfos := strings.Split(client.ClientId, "_")
 		if len(tmpClientInfos) < 2 {
@@ -151,12 +159,19 @@ func (manager *ClientManager) AddClient(client *Client) {
 }
 
 // 获取所有的客户端
-func (manager *ClientManager) AllClient() map[string]*Client {
+func (manager *ClientManager) AllClient() map[string]map[string]*Client {
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
-	result := map[string]*Client{}
+	result := map[string]map[string]*Client{}
 	for key, value := range manager.ClientIdMap {
-		result[key] = value
+		addrToClientMap, ok := result[key]
+		if !ok {
+			addrToClientMap = make(map[string]*Client)
+			result[key] = value
+		}
+		for k, v := range value {
+			addrToClientMap[k] = v
+		}
 	}
 	return result
 }
@@ -186,7 +201,7 @@ func (manager *ClientManager) DelClient(client *Client) {
 		return
 	}
 	logrus.WithFields(logrus.Fields{"ClientId": client.ClientId}).Info("待删除的客户端信息")
-	manager.delClientIdMap(client.ClientId)
+	manager.delClientIdMap(client.ClientId, client.Addr)
 	logrus.WithFields(logrus.Fields{"ClientId": client.ClientId}).Info("删除clientmap")
 
 	//删除所在的分组
@@ -203,15 +218,26 @@ func (manager *ClientManager) DelClient(client *Client) {
 }
 
 // 删除clientIdMap
-func (manager *ClientManager) delClientIdMap(clientId string) {
+func (manager *ClientManager) delClientIdMap(clientId, addr string) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
-	if _, ok := manager.ClientIdMap[clientId]; !ok {
+	addrToClientMap, ok := manager.ClientIdMap[clientId]
+	if !ok {
 		log.WithFields(log.Fields{"client_id": clientId}).Info("已经从clientIdMap删除")
 		return
 	}
-	delete(manager.ClientIdMap, clientId)
-	log.WithFields(log.Fields{"client_id": clientId}).Info("删除clientIdMap")
+	if _, ok := addrToClientMap[addr]; !ok {
+		log.WithFields(log.Fields{"client_id": clientId, "addr": addr}).Info("已经从clientIdMap删除")
+		return
+	}
+	delete(addrToClientMap, clientId)
+	if len(addrToClientMap) == 0 {
+		delete(manager.ClientIdMap, clientId)
+	} else {
+		log.WithFields(log.Fields{"client_id": clientId, "addr": addr}).Info("删除client from 成功")
+		return
+	}
+	log.WithFields(log.Fields{"client_id": clientId, "addr": addr}).Info("删除clientIdMap")
 
 	tmpClientInfos := strings.Split(clientId, "_")
 	if len(tmpClientInfos) < 2 {
@@ -270,15 +296,19 @@ func removeElement(nums []string, val string) []string {
 }
 
 // 通过clientId获取
-func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
+func (manager *ClientManager) GetByClientId(clientId string) (map[string]*Client, error) {
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
 	count := len(manager.ClientIdMap)
 	log.WithFields(log.Fields{"数量": count}).Info("连接数的数量")
-	if client, ok := manager.ClientIdMap[clientId]; !ok {
+	addrToClient := map[string]*Client{}
+	if tmpAddrToClient, ok := manager.ClientIdMap[clientId]; !ok {
 		return nil, errors.New("客户端不存在")
 	} else {
-		return client, nil
+		for addr, client := range tmpAddrToClient {
+			addrToClient[addr] = client
+		}
+		return addrToClient, nil
 	}
 }
 
@@ -375,13 +405,13 @@ func (manager *ClientManager) GetGroupClientList(groupKey string) []string {
 }
 
 // 添加到系统客户端列表
-func (manager *ClientManager) AddClient2SystemClient(systemId string, client *Client) {
+func (manager *ClientManager) AddClient2SystemClient(systemId, addr string, client *Client) {
 	manager.AddClient(client)
 	manager.SystemClientsLock.Lock()
 	defer manager.SystemClientsLock.Unlock()
 	manager.SystemClients[systemId] = append(manager.SystemClients[systemId], client.ClientId)
 	clientCount := len(manager.SystemClients)
-	logrus.WithFields(log.Fields{"count": clientCount}).Info("客户端数量")
+	logrus.WithFields(log.Fields{"count": clientCount, "systemId": systemId, "addr": addr}).Info("客户端数量")
 }
 
 // 删除系统里的客户端

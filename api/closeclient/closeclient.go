@@ -2,10 +2,11 @@ package closeclient
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/woodylan/go-websocket/api"
 	"github.com/woodylan/go-websocket/define/retcode"
 	"github.com/woodylan/go-websocket/servers"
-	"net/http"
 )
 
 type Controller struct {
@@ -31,7 +32,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	systemId := r.Header.Get("SystemId")
 
 	//发送信息
-	servers.CloseClient(inputData.ClientId, systemId)
+	servers.CloseClient(inputData.ClientId, systemId, r.RemoteAddr)
 
 	api.Render(w, retcode.SUCCESS, "success", map[string]string{})
 	return

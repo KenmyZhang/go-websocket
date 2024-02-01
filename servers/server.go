@@ -87,7 +87,7 @@ func SendMessage2Client(clientId string, sendUserId string, code string, msg str
 }
 
 // 关闭客户端
-func CloseClient(clientId, systemId string) {
+func CloseClient(clientId, systemId, clientAddr string) {
 	if util.IsCluster() {
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
 		if err != nil {
@@ -97,14 +97,14 @@ func CloseClient(clientId, systemId string) {
 
 		//如果是本机则发送到本机
 		if isLocal {
-			CloseLocalClient(clientId, systemId)
+			CloseLocalClient(clientId, systemId, clientAddr)
 		} else {
 			//发送到指定机器
 			CloseRpcClient(addr, clientId, systemId)
 		}
 	} else {
 		//如果是单机服务，则只发送到本机
-		CloseLocalClient(clientId, systemId)
+		CloseLocalClient(clientId, systemId, clientAddr)
 	}
 
 	return
@@ -119,29 +119,29 @@ func ClientStatistics(platform, account string) ([]string, int, error) {
 func AddClient2Group(systemId string, groupName string, clientId string, userId string, extend string) {
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
-		//判断key是否存在
-		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
-		if err != nil {
-			log.Errorf("%s", err)
-			return
-		}
-
-		if isLocal {
-			if client, err := Manager.GetByClientId(clientId); err == nil {
-				//添加到本地
-				Manager.AddClient2LocalGroup(groupName, client, userId, extend)
-			} else {
-				log.Error(err)
-			}
-		} else {
-			//发送到指定的机器
-			SendRpcBindGroup(addr, systemId, groupName, clientId, userId, extend)
-		}
+		//	//判断key是否存在
+		//	addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
+		//	if err != nil {
+		//		log.Errorf("%s", err)
+		//		return
+		//	}
+		//
+		//	if isLocal {
+		//		if client, err := Manager.GetByClientId(clientId); err == nil {
+		//			//添加到本地
+		//			Manager.AddClient2LocalGroup(groupName, client, userId, extend)
+		//		} else {
+		//			log.Error(err)
+		//		}
+		//	} else {
+		//		//发送到指定的机器
+		//		SendRpcBindGroup(addr, systemId, groupName, clientId, userId, extend)
+		//	}
 	} else {
-		if client, err := Manager.GetByClientId(clientId); err == nil {
-			//如果是单机，就直接添加到本地group了
-			Manager.AddClient2LocalGroup(groupName, client, userId, extend)
-		}
+		//if client, err := Manager.GetByClientId(clientId); err == nil {
+		//	//如果是单机，就直接添加到本地group了
+		//	Manager.AddClient2LocalGroup(groupName, client, userId, extend)
+		//}
 	}
 }
 
@@ -201,17 +201,20 @@ func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code
 }
 
 // 发送关闭信号
-func CloseLocalClient(clientId, systemId string) {
-	if conn, err := Manager.GetByClientId(clientId); err == nil && conn != nil {
-		if conn.SystemId != systemId {
-			return
+func CloseLocalClient(clientId, systemId, addr string) {
+	if addrToClientMap, err := Manager.GetByClientId(clientId); err == nil && addrToClientMap != nil {
+		if conn, ok := addrToClientMap[addr]; ok {
+			if conn.SystemId != systemId {
+				return
+			}
+			Manager.DisConnect <- conn
+			log.WithFields(log.Fields{
+				"host":        setting.GlobalSetting.LocalHost,
+				"port":        setting.CommonSetting.HttpPort,
+				"client_addr": addr,
+				"clientId":    clientId,
+			}).Info("主动踢掉客户端")
 		}
-		Manager.DisConnect <- conn
-		log.WithFields(log.Fields{
-			"host":     setting.GlobalSetting.LocalHost,
-			"port":     setting.CommonSetting.HttpPort,
-			"clientId": clientId,
-		}).Info("主动踢掉客户端")
 	}
 	return
 }
@@ -230,22 +233,26 @@ func WriteMessage() {
 			"msg":        clientInfo.Msg,
 			"data":       clientInfo.GetData(),
 		}).Info("发送到本机")
-		if conn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && conn != nil {
-			if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
-				Manager.DisConnect <- conn
-				log.WithFields(log.Fields{
-					"host":      setting.GlobalSetting.LocalHost,
-					"port":      setting.CommonSetting.HttpPort,
-					"messageId": clientInfo.MessageId,
-					"clientId":  clientInfo.ClientId,
-					"msg":       clientInfo.Msg,
-				}).Error("客户端异常离线：" + err.Error())
-			} else {
-				log.WithFields(log.Fields{
-					"messageId": clientInfo.MessageId,
-					"host":      setting.GlobalSetting.LocalHost,
-					"port":      setting.CommonSetting.HttpPort,
-					"clientId":  clientInfo.ClientId}).Info("发送成功")
+		if addrToConn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && addrToConn != nil {
+			for addr, conn := range addrToConn {
+				if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
+					Manager.DisConnect <- conn
+					log.WithFields(log.Fields{
+						"host":      setting.GlobalSetting.LocalHost,
+						"port":      setting.CommonSetting.HttpPort,
+						"messageId": clientInfo.MessageId,
+						"clientId":  clientInfo.ClientId,
+						"addr":      addr,
+						"msg":       clientInfo.Msg,
+					}).Error("客户端异常离线：" + err.Error())
+				} else {
+					log.WithFields(log.Fields{
+						"messageId": clientInfo.MessageId,
+						"host":      setting.GlobalSetting.LocalHost,
+						"port":      setting.CommonSetting.HttpPort,
+						"addr":      addr,
+						"clientId":  clientInfo.ClientId}).Info("发送成功")
+				}
 			}
 		} else {
 			log.WithFields(log.Fields{"err": err,
@@ -284,14 +291,16 @@ func PingTimer() {
 				logrus.Info("Manager为空，找不到客户端连接")
 				continue
 			}
-			for clientId, conn := range Manager.AllClient() {
-				if conn == nil {
-					logrus.WithFields(log.Fields{"client_id": clientId}).Info("客户端已经被下线删除")
-					continue
-				}
-				if err := conn.Socket.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(time.Second)); err != nil {
-					Manager.DisConnect <- conn
-					log.Errorf("发送心跳失败: %s 总连接数：%d", clientId, Manager.Count())
+			for clientId, addrToClientMap := range Manager.AllClient() {
+				for addr, conn := range addrToClientMap {
+					if conn == nil {
+						logrus.WithFields(log.Fields{"client_id": clientId, "addr": addr}).Info("客户端已经被下线删除")
+						continue
+					}
+					if err := conn.Socket.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(time.Second)); err != nil {
+						Manager.DisConnect <- conn
+						log.Errorf("发送心跳失败: %s 总连接数：%d", clientId, Manager.Count())
+					}
 				}
 			}
 		}

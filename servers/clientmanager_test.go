@@ -1,11 +1,12 @@
 package servers
 
 import (
+	"testing"
+
 	"github.com/gorilla/websocket"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/woodylan/go-websocket/pkg/setting"
 	"github.com/woodylan/go-websocket/tools/util"
-	"testing"
 )
 
 func TestAddClient(t *testing.T) {
@@ -13,7 +14,7 @@ func TestAddClient(t *testing.T) {
 	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, systemId, conn)
+	clientSocket := NewClient(clientId, "", systemId, conn)
 
 	manager.AddClient(clientSocket)
 
@@ -34,7 +35,7 @@ func TestDelClient(t *testing.T) {
 	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, systemId, conn)
+	clientSocket := NewClient(clientId, "", systemId, conn)
 	manager.AddClient(clientSocket)
 
 	manager.DelClient(clientSocket)
@@ -56,7 +57,7 @@ func TestCount(t *testing.T) {
 	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, systemId, conn)
+	clientSocket := NewClient(clientId, "", systemId, conn)
 
 	Convey("测试获取客户端数量", t, func() {
 		Convey("添加一个客户端后", func() {
@@ -82,7 +83,7 @@ func TestGetByClientId(t *testing.T) {
 	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, systemId, conn)
+	clientSocket := NewClient(clientId, "", systemId, conn)
 
 	Convey("测试通过clientId获取客户端", t, func() {
 		Convey("获取一个存在的clientId", func() {
@@ -105,7 +106,7 @@ func TestAddClient2LocalGroup(t *testing.T) {
 	userId := "userId"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, systemId, conn)
+	clientSocket := NewClient(clientId, "", systemId, conn)
 	manager.AddClient(clientSocket)
 	groupName := "testGroup"
 
@@ -128,7 +129,7 @@ func TestGetGroupClientList(t *testing.T) {
 	userId := "userId"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, systemId, conn)
+	clientSocket := NewClient(clientId, "", systemId, conn)
 	manager.AddClient(clientSocket)
 	groupName := "testGroup"
 

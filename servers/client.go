@@ -12,6 +12,7 @@ import (
 )
 
 type Client struct {
+	Addr        string          `json:"addr"`
 	ClientId    string          // 标识ID
 	SystemId    string          // 系统ID
 	Socket      *websocket.Conn // 用户连接
@@ -28,8 +29,9 @@ type SendData struct {
 	Data *interface{}
 }
 
-func NewClient(clientId string, systemId string, socket *websocket.Conn) *Client {
+func NewClient(clientId string, addr, systemId string, socket *websocket.Conn) *Client {
 	return &Client{
+		Addr:        addr,
 		ClientId:    clientId,
 		SystemId:    systemId,
 		Socket:      socket,

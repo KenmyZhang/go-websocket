@@ -29,18 +29,18 @@ func (this *CommonServiceServer) CloseClient(ctx context.Context, req *pb.CloseC
 		"port":     setting.CommonSetting.HttpPort,
 		"clientId": req.ClientId,
 	}).Info("接收到RPC关闭连接")
-	CloseLocalClient(req.ClientId, req.SystemId)
+	//CloseLocalClient(req.ClientId, req.SystemId, req.)
 	return &pb.CloseClientReply{}, nil
 }
 
 // 添加分组到group
 func (this *CommonServiceServer) BindGroup(ctx context.Context, req *pb.BindGroupReq) (*pb.BindGroupReply, error) {
-	if client, err := Manager.GetByClientId(req.ClientId); err == nil {
-		//添加到本地
-		Manager.AddClient2LocalGroup(req.GroupName, client, req.UserId, req.Extend)
-	} else {
-		log.Error("添加分组失败" + err.Error())
-	}
+	// if client, err := Manager.GetByClientId(req.ClientId); err == nil {
+	// 	//添加到本地
+	// 	//Manager.AddClient2LocalGroup(req.GroupName, client, req.UserId, req.Extend)
+	// } else {
+	// 	log.Error("添加分组失败" + err.Error())
+	// }
 	return &pb.BindGroupReply{}, nil
 }
 
