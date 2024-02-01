@@ -128,7 +128,7 @@ func (manager *ClientManager) AddClient(client *Client) {
 	}
 	if _, ok := addrToClientMap[client.Addr]; !ok {
 		log.WithFields(log.Fields{"client_id": client.ClientId, "addr": client.Addr}).Info("添加客户端")
-		addrToClientMap[client.ClientId] = client
+		addrToClientMap[client.Addr] = client
 
 		tmpClientInfos := strings.Split(client.ClientId, "_")
 		if len(tmpClientInfos) < 2 {
