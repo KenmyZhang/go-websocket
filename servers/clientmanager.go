@@ -118,15 +118,27 @@ func (manager *ClientManager) AddClient(client *Client) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
 
-	addrToClientMap, ok := manager.ClientIdMap[client.ClientId]
-	if ok {
+	var addrToClientMap map[string]*Client
+	data, _ := json.Marshal(&manager.ClientIdMap)
+	log.WithFields(log.Fields{"data": string(data)}).Info("添加client前")
+	if strings.Contains(client.ClientId, "APP_") {
+		delete(manager.ClientIdMap, client.ClientId)
+		addrToClientMap = make(map[string]*Client)
+		manager.ClientIdMap[client.ClientId] = addrToClientMap
 		addrToClientMap[client.Addr] = client
-		return
-	}
+	} else {
+		addrToClientMap, ok := manager.ClientIdMap[client.ClientId]
+		if ok {
+			addrToClientMap[client.Addr] = client
+			return
+		}
 
-	addrToClientMap = make(map[string]*Client)
-	manager.ClientIdMap[client.ClientId] = addrToClientMap
-	addrToClientMap[client.Addr] = client
+		addrToClientMap = make(map[string]*Client)
+		manager.ClientIdMap[client.ClientId] = addrToClientMap
+		addrToClientMap[client.Addr] = client
+	}
+	data, _ = json.Marshal(&manager.ClientIdMap)
+	log.WithFields(log.Fields{"data": string(data)}).Info("添加client后")
 
 	for addr := range addrToClientMap {
 		log.WithFields(log.Fields{"client_id": client.ClientId, "已有的地址": addr, "待添加的地址": client.Addr}).Info("client_id原有的conn")
