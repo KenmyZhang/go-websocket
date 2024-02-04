@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -22,9 +23,26 @@ type renderData struct {
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
+
 	//解析参数
 	systemId := r.FormValue("systemId")
 	logger := logrus.WithFields(log.Fields{"token": systemId, "client_addr": r.RemoteAddr})
+
+	// 打印头部信息
+	for name, values := range r.Header {
+		for _, value := range values {
+			logger.Info(fmt.Sprintf("%s: %s\n", name, value))
+		}
+	}
+
+	// 打印请求参数信息
+	r.ParseForm()
+	for name, values := range r.Form {
+		for _, value := range values {
+			logger.Info(fmt.Sprintf("%s: %s\n", name, value))
+		}
+	}
+
 	conn, err := (&websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
