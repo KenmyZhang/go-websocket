@@ -300,7 +300,7 @@ func PingTimer() {
 					}
 					if err := conn.Socket.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(time.Second)); err != nil {
 						Manager.DisConnect <- conn
-						log.Errorf("发送心跳失败: %s 总连接数：%d", clientId, Manager.Count())
+						log.Infof("发送心跳失败: %s, 关闭链接,总连接数：%d", clientId, Manager.Count())
 					}
 				}
 			}
